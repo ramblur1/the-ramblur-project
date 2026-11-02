@@ -103,7 +103,7 @@ Like any other large social media site the intention was for this platform to be
 
 Feel free to share this message, and link to copy the code for the site works with as many people as you like. It would be good if the right team/s capable of breathing life back into the project was to be made aware of ‘The Ramblur Project’ and be inspired to see it completed.
 
-I hope one day to see a version of the intended project successfully up and running, and or any creative spin off projects developed that may come from the release of the ‘Source Code’ and ‘Intellectual Property’.
+I hope one day to see a version of the intended project successfully up and running, and or any creative spin off projects developed that may come from the release of the ‘Source Code’ and ‘Intellectual Property’ of the ramblur project.
 <br>
 <br>
 <br>
