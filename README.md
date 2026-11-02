@@ -6,7 +6,7 @@ README - billion dollar platform project.
 
 The Ramblur Project
 
-About the project:
+<b>About the project:</b>
 
 In 2015 a web project was started to build a forum based social media platform aimed to achieve a fresh approach to traditional forum message board design. It was designed to be able to ‘follow all your interests in one place’ and support free speech.
 
