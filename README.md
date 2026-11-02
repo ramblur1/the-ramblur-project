@@ -6,7 +6,7 @@ README - billion dollar platform project.
 
 The Ramblur Project
 
-<b>About the project:</b>
+<h3>About the project:</h3>
 
 In 2015 a web project was started to build a forum based social media platform aimed to achieve a fresh approach to traditional forum message board design. It was designed to be able to ‘follow all your interests in one place’ and support free speech.
 
@@ -43,7 +43,7 @@ Another example using ‘pinned map locations’ would allow forum users when po
 
 Essentially this project was designed to be an all in one platform for any material to do with any forum subject matter, with the user being able to filter and theme via customising tools all their forum content from their own prospective to enhance their viewing experience. 
 
-Follow and create forums:
+<h3>Follow and create forums:</h3>
 
 Users would be able to choose to follow from thousands of pre-existing forums, and or create their own forums for their own communities. Forums that users created for their own communities would be as follows
 
@@ -55,11 +55,11 @@ Users would be able to choose to follow from thousands of pre-existing forums, a
        
 The idea being that owners of forums communities would not have to pay any monthly charges for hosting and or have to deal with the ongoing management of their hosting needs, while also having access to a richer array of features to offer to their community members, all presented with a modern social media look and feel. Further this would provide forum owners an opportunity to gain access to a broader range of new users that followed other interests on the platform as a whole.
 
-For comparison:
+<h3>For comparison:</h3>
 
 I appreciate that a text description of a visual format may be difficult to clearly understand, so for simplicity for current day comparison, think ‘Reddit’ but on steroids with loads more features, and an array of customisation tools putting the user in control of their viewing experience. Having said that even to this day ‘Reddit’ itself does not in any way compare to the project that was being developed. ‘Reddit’ is more comprised of feeds designed for entertainment, rather than traditional forums styled table content that’s divided and arranged into a hierarchy of categories. To be clear this is not a criticism of ‘Reddit and this project was not designed to compete with ‘Reddit’ as it is a different beast entirely, however ‘Reddit’ may be arguably considered the closest comparison that exists in the current marketplace. 
 
-The business model:
+<h3>The business model:</h3>
 
 In short the site would be funded by advertising.
 
@@ -69,13 +69,13 @@ This method also meant that users data didn't have to be scrapped or sold, being
 
 In addition it is an important metric to understand that one user of the platform would act as many users from an advertising model point of view. For example if on average one user followed 6 different topics of interests, then 10 million site users would equate to 60 million forum users from an advertising prospective. With cost effective and targeted subject related advertising this would show to be a powerful and profitable feature of the site works.
 
-To make a long story short:
+<h3>To make a long story short:</h3>
 
 The company raised up to 1.5 million in investment over a period of 4 years during site development. We hired up to half a dozen programmers during this time and went through the standard stages of development, re-design, further development, beta release/s, re-design more development, and this process was repeated numerous times.
 
 We went through the expected ups and downs of early development phases involved for such an ambitious project. We got 90 percent of the main project deliverables completed, and experienced investment / funding issues along the way, and with the onset of Covid lockdown in the year 2020 unfortunately (without the project being completed) the development of the site works came to a grinding halt. For the last five years since the code has been sitting on the shelf collecting dust so to speak. 
 
-Decision going forward:
+<h3>Decision going forward:</h3>
 
 The company has not been in a position to complete the project since due to a lack of financial capacity, and in consideration of other reasons that I won’t detail here, I have decided to make the source code ‘open sourced’ and available to the general public.
 
@@ -83,7 +83,7 @@ I appreciate usually there would be some type of commercial licensing agreement 
 
 In addition to making the code base ‘open sourced’, the company has also officially relinquished any previously held rights and or ownership over both the ‘Source Code’ and ‘Intellectual Property’ of the intended site works. This simply means that both the ‘Source Code’ and ‘Intellectual Property’ are no longer assets that are held by the company that originally created them, and that all rights have been released and distributed to the public for free use with no licencing or commercial restrictions.
 
-Community Project:
+<h3>Community Project:</h3>
 
 Download the code and go for it.
 
@@ -95,7 +95,7 @@ Whilst multiple groups of different programmers may choose to download and start
 
 The site under my direction was intended to be based in the ideals of ‘free speech’ so you likely find endless references to the same throughout certain text areas of the code base, and so may need to change these to suit your direction.
 
-No further assistance provided:
+<h3>No further assistance provided:</h3>
 
 Unfortunately I cannot provide any further assistance aside from the release of the ‘Source Code’ and ‘Intellectual Property’ as I do not have a coding or technical background myself, and as I am involved in other projects now of a different nature. My role was in the idea and creation of the concept overall of the project works itself, as such I played a purely creative role and therefore cannot provide any technical advice or assistance going forward in relation to how the code works, operates and or what is required to get it up and running again. However for those with the relevant skill-set and programming knowledge I’m sure they will be able work it out for themselves, and find the end result worth the effort. 
 
