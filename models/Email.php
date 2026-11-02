@@ -1,0 +1,603 @@
+<?php
+
+/**
+ * Model for email operations
+ *
+ * @author pberry, jbuchanan
+ */
+use Ramblur\Email\Builder\EmailTemplateBuilder;
+use Ramblur\Email\Emailer\GenericAWSTemplateEmailer;
+use Ramblur\Email\Builder\UserNameReminderTemplateBuilder;
+use Ramblur\Email\Builder\VerificationEmailTemplateBuilder;
+use Ramblur\Email\Builder\PasswordResetTemplateBuilder;
+use Ramblur\Email\Builder\VerificationEmailThirdPartyTemplateBuilder;
+use Ramblur\Email\Builder\InvestorEmailTemplateBuilder;
+use Ramblur\Email\Builder\ErrorReportEmailTemplateBuilder;
+use Ramblur\Email\Builder\FeedbackReportEmailTemplateBuilder;
+use Ramblur\Email\Builder\ReplyNotificationEmailTemplateBuilder;
+use Ramblur\Email\Builder\NewModContentNotificationEmailTemplateBuilder;
+use Ramblur\Email\Builder\BanFromSubjectEmailTemplateBuilder;
+use Ramblur\Email\Builder\UnbanFromSubjectEmailTemplateBuilder;
+
+use Ramblur\Email\Emailer\SiteInviteTemplateEmailer;
+use Ramblur\Email\Emailer\SubjectInviteTemplateEmailer;
+use Ramblur\Email\Emailer\ReplyNotificationEmailTemplateEmailer;
+use Ramblur\Email\Emailer\NewModContentNotificationEmailer;
+use Ramblur\Email\Emailer\BanFromSubjectEmailer;
+use Ramblur\Email\Emailer\UnbanFromSubjectEmailer;
+use Ramblur\Email\Builder\SubjectInviteTemplateBuilder;
+use Ramblur\Email\Builder\InviteRequestTemplateBuilder;
+use Ramblur\Email\Emailer\InviteRequestTemplateEmailer;
+use Ramblur\Email\Builder\SiteInviteTemplateBuilder;
+
+
+class Email extends CI_Model {
+
+	private $confHelper;
+
+	function __construct() {
+		parent::__construct();
+		$this->confHelper = new \Ramblur\CIUtils\ConfigHelper(get_instance());
+	}
+
+	/**
+	 * 
+	 * @return \stdClass
+	 */
+	protected function getSystemFromDetails() {
+
+		$this->config->load("aws");
+
+		$fromEmail = $this->confHelper->getConfig('ramblurFromEmail', 'no-reply@ramblur.com');
+		$fromEmailName = $this->confHelper->getConfig('ramblurFromName', 'No-Reply');
+
+		$std = new stdClass;
+		$std->ramblurFromEmail = $fromEmail;
+		$std->ramblurFromEmailName = $fromEmailName;
+		return $std;
+	}
+
+	/**
+	 * 
+	 * @param string $recipient
+	 * @param string $userName
+	 * @return bool
+	 */
+	public function sendUsernameReminder(string $recipient, string $userName): bool {
+		$template = new UserNameReminderTemplateBuilder(Logger::getLogger());
+		$template->siteUrl(base_url());
+		$template->addRecipientSubstitution($recipient, "resetUsername", $userName);
+		return $this->sendGenericTemplate([$recipient], $template, "Account Reminder");
+	}
+
+	/**
+	 * 
+	 * @param string $recipient
+	 * @param string $verificationCode
+	 * @param string $subjectName
+	 * @return bool
+	 */
+	public function sendTPVerificationEmail(string $recipient, string $verificationCode, string $subjectName): bool {
+		$template = new VerificationEmailThirdPartyTemplateBuilder(Logger::getLogger());
+		$template->getHeader()->setBranded(false);
+		$template->subjectName($subjectName);
+		$template->addRecipientSubstitution($recipient, "verificationUrl", base_url('verify/c/' . $verificationCode));
+		return $this->sendGenericTemplate([$recipient], $template, "Welcome!");
+	}
+
+	/**
+	 * 
+	 * @param string $recipient
+	 * @param string $verificationCode
+	 * @return bool
+	 */
+	public function sendVerificationEmail(string $recipient, string $verificationCode): bool {
+		$template = new VerificationEmailTemplateBuilder(Logger::getLogger());
+		$template->addRecipientSubstitution($recipient, "verificationUrl", base_url('verify/c/' . $verificationCode));
+		return $this->sendGenericTemplate([$recipient], $template, "Welcome!");
+	}
+
+	/**
+	 * 
+	 * @param string $recipient
+	 * @param string $verificationCode
+	 * @return bool
+	 */
+	public function sendVerificationReminder(string $recipient, string $verificationCode): bool {
+		return $this->sendVerificationEmail($recipient, $verificationCode);
+	}
+
+	/**
+	 * 
+	 * @param string $recipient
+	 * @param string $userName
+	 * @param string $resetCode
+	 * @return bool
+	 */
+	public function sendPasswordReset(string $recipient, string $userName, string $resetCode): bool {
+		$template = new PasswordResetTemplateBuilder(Logger::getLogger());
+		$template->addRecipientSubstitution($recipient, "resetUsername", $userName);
+		$template->addRecipientSubstitution($recipient, "passwordResetUrl", base_url('reset/c/' . $resetCode));
+		return $this->sendGenericTemplate([$recipient], $template, "Account Recovery");
+	}
+
+	/**
+	 * 
+	 * @param string $recipient
+	 * @param InvestorEmailTemplateBuilder $template
+	 * @return bool
+	 */
+	public function sendInvestorEmail(string $recipient, InvestorEmailTemplateBuilder $template): bool {
+		return $this->sendGenericTemplate([$recipient], $template, "ramblur Investment Enquiry");
+	}
+
+//jbmo
+	public function sendFeedbackReportEmail(string $recipient, FeedbackReportEmailTemplateBuilder $template): bool {
+		return $this->sendGenericTemplate([$recipient], $template, "ramblur Feedback");
+	}
+
+	public function sendErrorReportEmail(string $recipient, ErrorReportEmailTemplateBuilder $template): bool {
+		return $this->sendGenericTemplate([$recipient], $template, "ramblur Error Report");
+	}
+
+	/**
+	 * 
+	 * @param array $recipientAddresses
+	 * @param EmailTemplateBuilder $template
+	 * @param string $subject
+	 * @return bool
+	 */
+	public function sendGenericTemplate(array $recipientAddresses, EmailTemplateBuilder $template, string $subject): bool {
+		try {
+			$template->validateSubstitutions();
+		} catch (\Ramblur\Email\AWSTemplateException $e) {
+			Logger::getLogger()->addAlert($e);
+			return false;
+		}
+		$fromDetails = $this->getSystemFromDetails();
+		$emailer = new GenericAWSTemplateEmailer(
+				$subject, $fromDetails->ramblurFromEmail, $fromDetails->ramblurFromEmailName, $template, Logger::getLogger());
+		$emailer->addRecipients($recipientAddresses);
+
+		$this->load->model("batchJobs");
+		return $this->batchJobs->queueJob($emailer, $this->user->authCheck());
+	}
+
+	/**
+	 * 
+	 * @param type $emails
+	 * @param type $message
+	 * @param type $fromName
+	 * @param type $inviteFromName
+	 * @param type $inviteFromEmail
+	 * @return boolean
+	 */
+	function sendSiteInvite($emails, $message, $fromName, $inviteFromName, $inviteFromEmail, $sendNow = false) {
+
+		try {
+
+			$inviteTemplateBuilder = new SiteInviteTemplateBuilder(Logger::getLogger());
+
+			$inviteTemplateBuilder->inviteMessage($message)
+					->inviteFromName($inviteFromName)
+					->fromName($fromName)
+					->inviteFromEmail($inviteFromEmail)
+					->siteLink(base_url());
+
+			$safeEmails = [];
+			foreach ($emails as $email => $toName) {
+				if ($this->globals->emailVerify($email) === false) {
+					continue;
+				}
+				$safeEmails[] = $email;
+				$inviteTemplateBuilder->addRecipientSubstitution($email, "toName", $toName);
+			}
+
+			$fromDetails = $this->getSystemFromDetails();
+			$inviteEmailer = new SiteInviteTemplateEmailer($fromDetails->ramblurFromEmail, $fromDetails->ramblurFromEmailName, $inviteTemplateBuilder, Logger::getLogger());
+			$inviteEmailer->addRecipients($safeEmails);
+
+			/*
+			 * Either send the email immediately or send it to batch
+			 */
+			if ($sendNow) {
+				$sdkSES = Ramblur\Email\AWSSimpleEmailService::build(
+								$this->confHelper, \Ramblur\AWS\AWSSDK::getInstance());
+				return $inviteEmailer->sendEmails($sdkSES);
+			} else {
+				$this->load->model("batchJobs");
+				return $this->batchJobs->queueJob($inviteEmailer, $this->user->authCheck());
+			}
+		} catch (\Exception $e) {
+			Logger::getLogger()->addAlert("Could not send invite emails", [$e]);
+			return false;
+		}
+	}
+
+	/**
+	 * 
+	 * @param array $recipientAddresses
+	 * @param SubjectInviteTemplateBuilder $template
+	 * @param type $forumCreatedById
+	 * @return boolean
+	 */
+	public function sendSubjectInviteEmails(array $recipientAddresses, SubjectInviteTemplateBuilder $template, $forumCreatedById) {
+
+		$userId = $this->user->authCheck();
+
+		$forumCreatedByName = null;
+		$fromName = $this->user->getUserName($this->user->authCheck());
+		
+		if ($forumCreatedById === $userId) {
+			$forumCreatedByName = $fromName;
+		}
+
+		$template->forumCreatedByName($forumCreatedByName);
+		
+		$fromDetails = $this->getSystemFromDetails();
+		try {
+			$template->validateSubstitutions();
+		} catch (\Ramblur\Email\AWSTemplateException $e) {
+			Logger::getLogger()->addAlert($e);
+			return false;
+		}
+		$emailer = new SubjectInviteTemplateEmailer(
+				$fromDetails->ramblurFromEmail, $fromDetails->ramblurFromEmailName, $template, Logger::getLogger());
+		$emailer->addRecipients($recipientAddresses);
+
+		$this->load->model("batchJobs");
+		return $this->batchJobs->queueJob($emailer, $userId);
+	}
+
+	/**
+	 * 
+	 * @param array $recipientAddresses
+	 * @param InviteRequestTemplateBuilder $template
+	 * @return boolean
+	 */
+	public function sendInviteRequest(array $recipientAddresses, InviteRequestTemplateBuilder $template) {
+
+		try {
+			$template->validateSubstitutions();
+		} catch (\Ramblur\Email\AWSTemplateException $e) {
+			Logger::getLogger()->addAlert($e);
+			return false;
+		}
+
+		$fromDetails = $this->getSystemFromDetails();
+		$emailer = new InviteRequestTemplateEmailer(
+				$fromDetails->ramblurFromEmail, $fromDetails->ramblurFromEmailName, $template, Logger::getLogger());
+		$emailer->addRecipients($recipientAddresses);
+
+		$this->load->model("batchJobs");
+		return $this->batchJobs->queueJob($emailer, $this->user->authCheck());
+	}
+	
+	/**
+	 * 
+	 * @param string $userId
+	 * @param int $postId
+	 * @param int $subjectId
+	 * @param string $subjectName
+	 * @param boolean $sendNow
+	 * @return boolean
+	 */
+	function sendReplyNotificationEmail($nodeId, $subjectId, $sendNow = false) {
+			//Logger::getLogger()->info();
+		try {
+			
+			$userId = $this->user->authCheck();
+			if(!$userId) {	
+				return false;
+			}
+			
+			$postData = $this->post->getReplyEmailNotificationData($nodeId);
+			if($userId == $postData["nodeUserId"]) {
+				return false;
+			}
+			
+			$toEmailAddress = $this->user->getUserEmail($postData["nodeUserId"]);
+			
+			if($postData["mediaFileName"] && (
+					   $postData["mediaFileType"] === 'photo' 
+					|| $postData["mediaFileType"] === 'link' 
+					|| $postData["mediaFileType"] === 'jpg'
+					|| $postData["mediaFileType"] === 'drawing'
+					)) { 
+				$postData["mediaFileName"] = rtrim(web_assets_url(),'/') . $this->file->getRelFilePath($postData["mediaFileName"],$postData["private"]) . '-sddefault';
+			}
+			
+			$postURL = base_url() . ($postData["private"] ? 'private/' : '') . str_replace(' ', '-', $postData["subjectName"]) . '-forum' . '/' . $subjectId . '/' . $postData["postId"];
+			$ramblurURL = base_url();
+			$isRamblurForum = ($postData["type"] > 0 ? false : true);
+			$viewBtnTxt = ($isRamblurForum ? 'view on ramblur' : 'view reply');
+			$subjectText = ($isRamblurForum ? 'on ramblur' : 'in ' . $postData["subjectName"]);
+			$primaryColour = $postData["primaryColour"];
+			//if(!$isRamblurForum) {
+			//	$primaryColour = ($postData["userprimaryColour"] == null ? $postData["primaryColour"] : $postData["userprimaryColour"]);
+			//}
+			//$secondaryColour = ($postData["usersecondaryColour"] == null ? $postData["secondaryColour"] : $postData["usersecondaryColour"]);
+			$secondaryColour = $postData["secondaryColour"];
+			$replyNotificationTemplateBuilder = new ReplyNotificationEmailTemplateBuilder($isRamblurForum, $postData["subjectName"], $secondaryColour, $postData["themeFontSecondary"], Logger::getLogger());
+	
+			$replyNotificationTemplateBuilder->subjectName($postData["subjectName"])
+					->postMedia($postData["mediaFileName"])
+					->mediaFileType($postData["mediaFileType"])
+					->mediaMimeType($postData["mediaMimeType"])
+					->isRamblurForum($isRamblurForum)
+					->viewBtnTxt($viewBtnTxt)
+					->privateForum($postData["private"])
+					->postSnippet($postData["snippet"])
+					->postURL($postURL)
+					->ramblurURL($ramblurURL)
+					->primaryColour($primaryColour)
+					->themeFontPrimary($postData["themeFontPrimary"])
+					->secondaryColour($secondaryColour);
+
+			$safeEmails = [];
+			if ($this->globals->emailVerify($toEmailAddress)) {
+				$safeEmails[] = $toEmailAddress;
+			}
+
+			$fromDetails = $this->getSystemFromDetails();
+			$replyNotificationEmailer = new ReplyNotificationEmailTemplateEmailer(
+														$subjectText,
+														$fromDetails->ramblurFromEmail, 
+														$fromDetails->ramblurFromEmailName, 
+														$replyNotificationTemplateBuilder, 
+														Logger::getLogger()
+								);
+			$replyNotificationEmailer->addRecipients($safeEmails);
+
+			/*
+			 * Either send the email immediately or send it to batch
+			 */
+			if ($sendNow) {
+				$sdkSES = Ramblur\Email\AWSSimpleEmailService::build(
+								$this->confHelper, \Ramblur\AWS\AWSSDK::getInstance());
+				return $replyNotificationEmailer->sendEmails($sdkSES);
+			} else {
+				$this->load->model("batchJobs");
+				return $this->batchJobs->queueJob($replyNotificationEmailer, $this->user->authCheck());
+			}
+		} catch (\Exception $e) {
+			Logger::getLogger()->addAlert("Could not send reply notification email", [$e]);
+			return false;
+		}
+	}
+	
+	/**
+	 * 
+	 * @param string $userId
+	 * @param int $postId
+	 * @param int $subjectId
+	 * @param string $subjectName
+	 * @param boolean $sendNow
+	 * @return boolean
+	 */
+	function sendNewModContentNotificationEmail($postId, $nodeId, $subjectId, $sendNow = false) {
+		
+		try {
+			if(!$this->user->authCheck()) {
+				return false;
+			}
+			
+			$postData = $this->post->getReplyEmailNotificationData($nodeId);
+			
+			//turned off for ramblur forums
+			//jbmo if($postData["type"] == 0) {
+			//	return false;
+			//}
+
+			//$forumMembers = $this->group->getCurrentForumMembers($subjectId, false);
+
+			//jbmo
+			if ($postData["private"] || $postData["type"] != 0) {
+				$forumMembers = $this->group->getCurrentForumMembers($subjectId, false);
+			} else {
+				$forumMembers = $this->group->getAllRamblurMembers();
+			}
+
+
+
+			$safeEmails = [];
+			//$userIds = [];
+			//no forum members
+			//
+			//if(!$forumMembers) {
+			//	return false;
+			//}
+			foreach ($forumMembers as $forumMember) {
+				//convert this to batch request when get a chance!!!!
+				//$userIds[] = $forumMember["userId"];
+				//$toEmailAddress = $this->user->getUserEmail($forumMember["userId"]);
+				/*dont need to verify as they are coming from the User table (already verified)*/
+				//if ($this->globals->emailVerify($toEmailAddress) === false) {
+				//	continue;
+				//}
+				
+				//$safeEmails[] = $toEmailAddress;
+				$safeEmails[] = $this->user->getUserEmail($forumMember["userId"]);
+				
+			}
+			//$safeEmails = $this->user->getUserEmailBatch($userIds);
+			//$safeEmails = $this->user->getUserEmailBatch($userIds);
+
+			if(empty($safeEmails)) {
+				return;
+			}
+
+
+			$postURL = base_url() . ($postData["private"] ? 'private/' : '') . str_replace(' ', '-', $postData["subjectName"]) . '-forum' . '/' . $subjectId . '/' . $postId;
+			$ramblurURL = base_url();
+			$isRamblurForum = ($postData["type"] > 0 ? false : true);
+			$newModContentTemplateBuilder = new NewModContentNotificationEmailTemplateBuilder($isRamblurForum, $postData["subjectName"], $postData["secondaryColour"], $postData["themeFontSecondary"], Logger::getLogger());
+			
+			//Don't use user themes for mod content emails
+			//$primaryColour = ($postData["userprimaryColour"] == null ? $postData["primaryColour"] : $postData["userprimaryColour"]);
+			
+			$primaryColour = $postData["primaryColour"];
+			
+			$newModContentTemplateBuilder->subjectName($postData["subjectName"])
+					->privateForum($postData["private"])
+					->postURL($postURL)
+					->ramblurURL($ramblurURL)
+					->primaryColour($primaryColour)
+					->themeFontPrimary($postData["themeFontPrimary"]);
+			
+			$fromDetails = $this->getSystemFromDetails();
+			$newModContentEmailer = new NewModContentNotificationEmailer(
+														$postData["subjectName"],
+														$fromDetails->ramblurFromEmail, 
+														$fromDetails->ramblurFromEmailName, 
+														$newModContentTemplateBuilder, 
+														Logger::getLogger()
+								);
+			$newModContentEmailer->addRecipients($safeEmails);
+
+			/*
+			 * Either send the email immediately or send it to batch
+			 */
+			if ($sendNow) {
+				$sdkSES = Ramblur\Email\AWSSimpleEmailService::build(
+								$this->confHelper, \Ramblur\AWS\AWSSDK::getInstance());
+				return $newModContentEmailer->sendEmails($sdkSES);
+			} else {
+				$this->load->model("batchJobs");
+				return $this->batchJobs->queueJob($newModContentEmailer, $this->user->authCheck());
+			}
+		} catch (\Exception $e) {
+			Logger::getLogger()->addAlert("Could not send new mod content notification email", [$e]);
+			return false;
+		}
+	}
+	
+	
+	/**
+	 * 
+	 * @param string $userId
+	 * @param int $postId
+	 * @param int $subjectId
+	 * @param string $subjectName
+	 * @param boolean $sendNow
+	 * @return boolean
+	 */
+	function sendBanFromSubjectEmail($userId, $reportId, $subjectId, $banPeriod, $reasons, $sendNow = false) {
+		
+		try {
+			
+			if(!$this->user->authCheck()) {
+				return false;
+			}
+			
+			$report = $this->reported_content->getReportedContent($reportId);
+			$postData = $this->subject->getSubjectDetailsForBan($report["reportedUserId"],$subjectId);
+			
+			$out = str_replace("abuse","personal attack",$reasons);
+			$out = str_replace("advertising","advert posting",$out);
+			$out = str_replace("adult","adult content",$out);
+			$out = str_replace("inappropriate","inappropriate content",$out);
+			$out = str_replace("inapbhvr","inappropriate behaviour",$out);
+			$out = str_replace("spam","spamming",$out);
+			
+			$isRamblurForum = ($postData["type"] > 0 ? false : true);
+			$primaryColour = $postData["primaryColour"];
+			$safeEmails = [];
+			
+			//$toEmailAddress = $this->user->getUserEmail($userId);
+			$safeEmails[] = $postData["email"]; 
+			
+			$banFromSubjectEmailTemplateBuilder = new BanFromSubjectEmailTemplateBuilder($isRamblurForum, $postData["subjectName"], $postData["secondaryColour"], $postData["themeFontSecondary"], Logger::getLogger());
+		
+			$banFromSubjectEmailTemplateBuilder->subjectName($postData["subjectName"])
+					->banPeriod($banPeriod)
+					->banReasons(implode(', ',$out))
+					->primaryColour($primaryColour)
+					->themeFontPrimary($postData["themeFontPrimary"]);
+			
+			$fromDetails = $this->getSystemFromDetails();
+			$banFromSubjectEmailer = new BanFromSubjectEmailer(
+														$postData["subjectName"],
+														$fromDetails->ramblurFromEmail, 
+														$fromDetails->ramblurFromEmailName, 
+														$banFromSubjectEmailTemplateBuilder, 
+														Logger::getLogger()
+								);
+			$banFromSubjectEmailer->addRecipients($safeEmails);
+
+			/*
+			 * Either send the email immediately or send it to batch
+			 */
+			if ($sendNow) { 
+				$sdkSES = Ramblur\Email\AWSSimpleEmailService::build(
+								$this->confHelper, \Ramblur\AWS\AWSSDK::getInstance());
+				return $banFromSubjectEmailer->sendEmails($sdkSES);
+			} else {
+				$this->load->model("batchJobs");
+				return $this->batchJobs->queueJob($banFromSubjectEmailer, $this->user->authCheck());
+			}
+		} catch (\Exception $e) {
+			Logger::getLogger()->addAlert("Could not send moderator ban email", [$e]);
+			return false;
+		}
+	}
+	/**
+	 * 
+	 * @param string $userId
+	 * @param int $postId
+	 * @param int $subjectId
+	 * @param string $subjectName
+	 * @param boolean $sendNow
+	 * @return boolean
+	 */
+	function unbanFromSubjectEmail($userId, $subjectId, $sendNow = false) {
+		
+		try {
+			
+			if(!$this->user->authCheck()) {
+				return false;
+			}
+			
+			$postData = $this->subject->getSubjectDetailsForBan($userId,$subjectId);
+			$isRamblurForum = ($postData["type"] > 0 ? false : true);
+			$primaryColour = $postData["primaryColour"];
+			$safeEmails = [];
+			
+			//$toEmailAddress = $this->user->getUserEmail($userId);
+			$safeEmails[] = $postData["email"]; 
+			
+			$unbanFromSubjectEmailTemplateBuilder = new UnbanFromSubjectEmailTemplateBuilder($isRamblurForum, $postData["subjectName"], $postData["secondaryColour"], $postData["themeFontSecondary"], Logger::getLogger());
+			
+			$unbanFromSubjectEmailTemplateBuilder->subjectName($postData["subjectName"])
+					->primaryColour($primaryColour)
+					->themeFontPrimary($postData["themeFontPrimary"]);
+			
+			$fromDetails = $this->getSystemFromDetails();
+			$unbanFromSubjectEmailer = new UnbanFromSubjectEmailer(
+														$postData["subjectName"],
+														$fromDetails->ramblurFromEmail, 
+														$fromDetails->ramblurFromEmailName, 
+														$unbanFromSubjectEmailTemplateBuilder, 
+														Logger::getLogger()
+								);
+			$unbanFromSubjectEmailer->addRecipients($safeEmails);
+
+			/*
+			 * Either send the email immediately or send it to batch
+			 */
+			if ($sendNow) { 
+				$sdkSES = Ramblur\Email\AWSSimpleEmailService::build(
+								$this->confHelper, \Ramblur\AWS\AWSSDK::getInstance());
+				return $unbanFromSubjectEmailer->sendEmails($sdkSES);
+			} else {
+				$this->load->model("batchJobs");
+				return $this->batchJobs->queueJob($unbanFromSubjectEmailer, $this->user->authCheck());
+			}
+		} catch (\Exception $e) {
+			Logger::getLogger()->addAlert("Could not send moderator unban email", [$e]);
+			return false;
+		}
+	}
+	
+
+}
