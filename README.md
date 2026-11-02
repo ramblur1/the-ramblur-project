@@ -107,6 +107,7 @@ I hope one day to see a version of the intended project successfully up and runn
 </b>
 </b>
 </b>
+</b>
 I wish you every success with it.
 Director of the Company
 All the best.
