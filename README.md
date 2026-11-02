@@ -81,7 +81,7 @@ The company has not been in a position to complete the project since due to a la
 
 I appreciate usually there would be some type of commercial licensing agreement attached to such, however for principled reasons I have chosen to make it freely available for commercial use to the general public.
 
-In addition to making the code base ‘open sourced’, the company has also officially relinquished any previously held rights and or ownership over both the ‘Source Code’ and ‘Intellectual Property’ of the intended site works. This simply means that both the ‘Source Code’ and ‘Intellectual Property’ is no longer an asset that is held by the company that originally created it, and that all rights have been released and distributed to the public for free use with no commercial restrictions.
+In addition to making the code base ‘open sourced’, the company has also officially relinquished any previously held rights and or ownership over both the ‘Source Code’ and ‘Intellectual Property’ of the intended site works. This simply means that both the ‘Source Code’ and ‘Intellectual Property’ is no longer an asset that is held by the company that originally created it, and that all rights have been released and distributed to the public for free use with no licencing or commercial restrictions.
 
 Community Project:
 
