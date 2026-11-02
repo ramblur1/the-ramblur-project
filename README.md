@@ -2,7 +2,7 @@
 
 README - billion dollar platform project.
 
-<h2>Title:</h2>
+<h3>Title:</h3>
 
 The Ramblur Project
 
