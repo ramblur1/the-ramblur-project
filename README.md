@@ -101,7 +101,7 @@ Unfortunately I cannot provide any further assistance aside from the release of 
 
 Like any other large social media site the intention was for this platform to be able to service many tens to hundreds of million of users, to have a clear point of difference in the marketplace and be a multi billion dollar product. It may still be all of those things for those that have the time and resources to see it’s full potential realised.
 
-Feel free to share this message, and link to download code for the site works with as many people as you like. It would be good if the right team/s capable of breathing life back into the project was to be made aware of ‘The Ramblur Project’ and be inspired to see it completed.
+Feel free to share this message, and link to copy the code for the site works with as many people as you like. It would be good if the right team/s capable of breathing life back into the project was to be made aware of ‘The Ramblur Project’ and be inspired to see it completed.
 
 I hope one day to see a version of the intended project successfully up and running, and or any creative spin off projects developed that may come from the release of the ‘Source Code’ and ‘Intellectual Property’.
 <br>
